@@ -38,16 +38,16 @@ The API may update frequently.
 ## Table of Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-* [Installation](#installation)
-* [Usage](#usage)
-  * [`FirestoreProvider`](#firestoreprovider)
-  * [`FirestoreCollection`](#firestorecollection)
-  * [`FirestoreDocument`](#firestoredocument)
-  * [`Firestore`](#firestore)
-  * [`withFirestore`](#withfirestore)
+
+- [Installation](#installation)
+- [Usage](#usage)
+  - [`FirestoreProvider`](#firestoreprovider)
+  - [`FirestoreCollection`](#firestorecollection)
+  - [`FirestoreDocument`](#firestoredocument)
+  - [`Firestore`](#firestore)
+  - [`withFirestore`](#withfirestore)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -89,7 +89,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import firebase from '@firebase/app';
 import '@firebase/firestore';
-import { FirestoreProvider } from "react-firestore";
+import { FirestoreProvider } from 'react-firestore';
 
 import App from './App';
 
@@ -135,7 +135,10 @@ Example usage to get a collection and sort by some fields:
 <FirestoreCollection
   path="stories"
   sort="publishedDate:desc,authorName"
-  render={({ isLoading, data }) => {
+  render={({ isLoading, data, error }) => {
+    if (error) {
+      return `Sorry, something went wrong. ${error.message}`;
+    }
     return isLoading ? (
       <Loading />
     ) : (
@@ -183,21 +186,27 @@ The maximum number of documents to retrieve from the collection.
 > `array` or `array of array` | defaults to `null`
 
 Passing in an array of strings creates a simple query to filter the collection by
+
 ```jsx
 <FirestoreCollection
-      path={"users"}
-      filter={['firstName', '==', 'Mike']}
-      render={()=>{/* render stuff*/}}
-    />
+  path={'users'}
+  filter={['firstName', '==', 'Mike']}
+  render={() => {
+    /* render stuff*/
+  }}
+/>
 ```
 
 Passing in an array of arrays creates a compound query to filter the collection by
+
 ```jsx
 <FirestoreCollection
-      path={"users"}
-      filter={[['firstName', '==', 'Mike'], ['lastName', '==', 'Smith']]}
-      render={()=>{/* render stuff*/}}
-    />
+  path={'users'}
+  filter={[['firstName', '==', 'Mike'], ['lastName', '==', 'Smith']]}
+  render={() => {
+    /* render stuff*/
+  }}
+/>
 ```
 
 ##### render
@@ -210,6 +219,7 @@ contains the following fields:
 
 | property  | type                     | description                                                                                                                                                                                         |
 | --------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| error     | `Object` / `null`        | Returns the firebase query error, if there is one. Errors can occur when the app queries data for which it doesn't have the right permissions, or if there's no network connection.                 |
 | isLoading | `boolean`                | Loading status for the firebase query. `true` until an initial payload from Firestore is received.                                                                                                  |
 | data      | `Array<any>`             | An array containing all of the documents in the collection. Each item will contain an `id` along with the other data contained in the document.                                                     |
 | snapshot  | `QuerySnapshot` / `null` | The firestore `QuerySnapshot` created to get data for the collection. See [QuerySnapshot docs](https://cloud.google.com/nodejs/docs/reference/firestore/latest/QuerySnapshot) for more information. |
@@ -224,7 +234,10 @@ whenever the given document is updated in Firestore.
 ```jsx
 <FirestoreDocument
   path="stories/1"
-  render={({ isLoading, data }) => {
+  render={({ isLoading, data, error }) => {
+    if (error) {
+      return `Sorry, something went wrong. ${error.message}`;
+    }
     return isLoading ? (
       <Loading />
     ) : (
@@ -258,6 +271,7 @@ contains the following fields:
 
 | property  | type                        | description                                                                                                                                                                                                |
 | --------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| error     | `Object` / `null`           | Returns the firebase query error, if there is one. Errors can occur when the app queries data for which it doesn't have the right permissions, or if there's no network connection.                        |
 | isLoading | `boolean`                   | Loading status for the firebase query. `true` until an initial payload from Firestore is received.                                                                                                         |
 | data      | `Object` / `null`           | The document that resides at the given `path`. Will be `null` until an initial payload is received. The document will contain an `id` along with the other data contained in the document.                 |
 | snapshot  | `DocumentSnapshot` / `null` | The firestore `DocumentSnapshot` created to get data for the document. See [DocumentSnapshot docs](https://cloud.google.com/nodejs/docs/reference/firestore/latest/DocumentSnapshot) for more information. |
@@ -287,8 +301,8 @@ or if you would just rather interact directly with the `firestore` object.
 This is the function where you render whatever you want using the firestore
 object passed in.
 
-| property  | type     | description                                                                                                                           |
-| --------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| property  | type     | description                                                                                                                                   |
+| --------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | firestore | `Object` | The `Firestore` class from [firestore][firestore-package]. See the docs for the [Firestore class][firestore-class-docs] for more information. |
 
 ### `withFirestore`
@@ -299,7 +313,7 @@ directly to the wrapped component via the `firestore` prop.
 ```jsx
 class MyComponent extends Component {
   state = {
-    story: null
+    story: null,
   };
 
   componentDidMount() {

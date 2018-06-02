@@ -14,6 +14,7 @@ class FirestoreDocument extends Component {
   };
 
   state = {
+    error: null,
     isLoading: true,
     data: null,
     snapshot: null,
@@ -31,7 +32,7 @@ class FirestoreDocument extends Component {
     if (nextProps.path !== this.props.path) {
       this.handleUnsubscribe();
 
-      this.setState({ isLoading: true }, () =>
+      this.setState({ isLoading: true, error: null }, () =>
         this.setupFirestoreListener(this.props),
       );
     }
@@ -48,17 +49,36 @@ class FirestoreDocument extends Component {
     const { path } = props;
     const documentRef = firestoreDatabase.doc(path);
 
-    this.unsubscribe = documentRef.onSnapshot(snapshot => {
-      if (snapshot) {
-        this.setState({
-          isLoading: false,
-          data: {
-            id: snapshot.id,
-            ...snapshot.data(),
-          },
-          snapshot,
-        });
-      }
+    this.unsubscribe = documentRef.onSnapshot(
+      this.handleFirestoreSnapshot,
+      this.handleFirestoreError,
+    );
+  };
+
+  handleFirestoreSnapshot = snapshot => {
+    if (snapshot.exists) {
+      this.setState({
+        error: null,
+        isLoading: false,
+        data: {
+          id: snapshot.id,
+          ...snapshot.data(),
+        },
+        snapshot,
+      });
+    } else {
+      this.handleFirestoreError(
+        new Error(`Document does not exist at ${snapshot.ref.path}`)
+      );
+    }
+  };
+
+  handleFirestoreError = error => {
+    this.setState({
+      error,
+      isLoading: false,
+      data: null,
+      snapshot: null,
     });
   };
 
